@@ -3,10 +3,9 @@
 #' @param newxy new set of coordinates for x, y
 #' @param dat data used to train SVM
 #' @param kernel kernel specification 
-class1 <- function(newxy, kernel, dat = NULL, svm1 = NULL) {
+class1 <- function(newxy, kernel, dat = NULL, svm1 = NULL, type = "one-classification" ) {
     if(is.null(svm1)) {
-        svm1 <- svm(dat, kernel = kernel, type = "one-classification", 
-        scale = F)
+        svm1 <- svm(dat, kernel = kernel, type = type, scale = F)
     }
 
     # Extract output
