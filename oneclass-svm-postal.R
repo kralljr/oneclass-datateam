@@ -93,8 +93,11 @@ true <- xs[c1 == 1, ]
 b1 <- true[chull(true), ]
 
 plot(1, 1, type = "n", xlab = paste("Pixel", j), 
-     ylab = paste("Pixel", k), xlim = c(-1, -.7), ylim = c(-1, -.7))
-polygon(b1)
-text(-.8, -.75, labels = "Anomalous")
-text(-.95, -.9, labels = "Not anomalous")
+     ylab = paste("Pixel", k), xlim = c(-1.2, 1), ylim = c(-1.2, 1))
+polygon(b1, lwd = 2)
+text(-1, -1.1, labels = "Anomalous")
+text(-.95, .9, labels = "Not anomalous")
+
+cols <- ifelse(predict(svm_model), "red", "blue")
+points(postaljk[, 1], postaljk[, 2], col = cols)
 
