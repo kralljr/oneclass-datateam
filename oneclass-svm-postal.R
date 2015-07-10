@@ -1,5 +1,9 @@
+# source class1 function
+source("oneclass-pred.R")
+
 # Change this directory path to where your data are stored
 mylib <- "~/Dropbox/STRAND/data"
+
 
 # Load libraries
 library(e1071)
@@ -22,7 +26,7 @@ legend("bottomright", legend = c("1's", "2's"), col = c("black", "red"),
 
 # Try SVM using linear kernel
 svm_model <- svm(postal1[, c(j, k)], kernel = "linear", 
-    type = "one-classification", scale = F)
+    scale = F)
 
 
 # For each observation, create prediction
@@ -43,7 +47,7 @@ table(pred2)
 
 # Check against using my function
 postaljk <- as.matrix(postal1[, c(j, k)])
-testfn <- class1(postaljk, postaljk, "linear")
+testfn <- class1(postaljk, postaljk, kernel= "linear", type = NULL)
 table(testfn)
 
 
@@ -65,7 +69,7 @@ pred <- predict(svm_model)
 table(pred)
 
 # Predict from my function
-testfn <- class1(postaljk, postaljk, "radial")
+testfn <- class1(postaljk,  dat = postaljk, kernel = "radial")
 table(testfn)
 
 
