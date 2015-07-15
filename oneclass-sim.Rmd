@@ -11,7 +11,7 @@ output:
 
 
 
-```{r lib}
+```{r lib, echo = F, warning = F, message = F}
 # source class1 function
 source("oneclass-pred.R")
 
@@ -21,6 +21,12 @@ library(e1071)
 library(dplyr)
 library(mvtnorm)
 library(ggplot2)
+library(RColorBrewer)
+library(knitr)
+
+
+opts_chunk$set(message = F, fig.align = "center", warning = F, echo = F, fig.width = 15, fig.height = 15)
+
 ```
 
 
@@ -51,21 +57,29 @@ plot(x[, 1], x[, 2], xlim = c(-1, 15), ylim = c(-1, 15))
 
 
 ```{r simfun}
-# function to simulate data
+#' function to obtain one-class results for different hyperparameters
+#' @param x features (n obs X n features)
+#' @param k1 kernel
+#' @param gam1 gamma
+#' @param nu1 nu
+#' @param deg1 degree
 simfun <- function(x, k1, gam1, nu1, deg1) {
+	types <- "0"
 	svm_modelN <- list()
 	for(i in 1 : length(gam1)) {
 		svm_modelN[[i]] <- list()
 		for(j in 1 : length(nu1)) {
 			svm_modelN[[i]][[j]] <- list()
 			for(k in 1 : length(deg1)) {
-				
+				type1 <- paste0("Gam=", gam1[i], ", Nu=", nu1[j], ", Deg=", deg1[k]) 
+			        types <- c(types, rep(type1, nrow(x)))	
 				svm_modelN[[i]][[j]][[k]] <- svm(x, kernel = k1, scale = F, 
 					type = "one-classification", gamma = gam1[i], nu = nu1[j], degree = deg1[k])
 			}
 		}
 	}
-	svm_modelN
+	types <- types[-1]
+	list(svmm = svm_modelN, types = types)
 }
 
 
@@ -76,17 +90,28 @@ simfun <- function(x, k1, gam1, nu1, deg1) {
 ```{r fun2}
 
 
-
-plotfun <- function(x, svm_modelN, gams = NULL, nus = NULL, degs = NULL) {
-	
+#' Function to display all one-class results
+#' @param x features (n obs X n features)
+#' @param svm_model_out results from simfun 
+plotfun <- function(x, svm_model_out) {
+	svm_modelN <- svm_model_out$svmm
+	types <- svm_model_out$types
 	# For each predicted plot
 	pred2 <- TRUE
 	xdat <- x
+	l <- 1
 	for(i in 1 : length(svm_modelN)) {
-		if(i > 1) {
-			xdat <- rbind(xdat, x)
+		for(j in 1 : length(svm_modelN[[i]])) {
+			for(k in 1 : length(svm_modelN[[i]][[j]])) {
+
+
+			if(l > 1) {
+				xdat <- rbind(xdat, x)
+			}
+			pred2 <- c(pred2, predict(svm_modelN[[i]][[j]][[k]]))
+			l <- l + 1
+			}
 		}
-		pred2 <- c(pred2, predict(svm_modelN[[i]]))
 	}
 	pred2 <- pred2[-1]
 	# Specify colors based on predictions
@@ -97,15 +122,12 @@ plotfun <- function(x, svm_modelN, gams = NULL, nus = NULL, degs = NULL) {
 	lims <- sort(c(mean1[1] + s1 * 5, s1), decreasing = F)
 
 
-
-	type1 <- ifelse(is.null(gams), ifelse(is.null(nus), "Degree", "Nu"),  "Gamma")
-	type2 <- rep(c("Default", type2), each = nrow(x))
-	newdat <- data.frame(xdat, cols, paste0(type1, " = ", type2))
-	colnames(newdat) <- c("x1", "x2", "pred", "type")
+	newdat <- data.frame(xdat, cols, types)
+	colnames(newdat) <- c("x1", "x2", "pred", "types")
 
 	ggplot(newdat, aes(x = x1, y = x2, col = pred)) + 
 		geom_point(size = 5) + 
-		facet_wrap( ~ type) +
+		facet_wrap( ~ types, ncol = 4) +
 		theme_bw() +
 		theme(text = element_text(size = 20)) +
 
@@ -123,6 +145,7 @@ deg1 <- c(3)
 nu1 <- c(0.01, 0.1, 0.2, 0.4, 0.8)
 gam1 <- c(0.01, 0.1, 1, 5)
 simlin <- simfun(x, k1, gam1, nu1, deg1) 
+plotfun(x, simlin)
 ```
 
 
@@ -131,11 +154,12 @@ simlin <- simfun(x, k1, gam1, nu1, deg1)
 # Polynomial kernel
 
 
-```{r poly}
+```{r poly, fig.height = 30}
 k1 <- "polynomial"
 deg1 <- seq(3, 7)
 nu1 <- c(0.1, 0.2, 0.4)
 simpoly <- simfun(x, k1, gam1, nu1, deg1) 
+plotfun(x, simpoly)
 ```
 
 # Sigmoid kernel
@@ -145,6 +169,7 @@ simpoly <- simfun(x, k1, gam1, nu1, deg1)
 k1 <- "sigmoid"
 deg1 <- c(3)
 simsig <- simfun(x, k1, gam1, nu1, deg1) 
+plotfun(x, simsig)
 ```
 
 # Radial basis function / gaussian kernel
@@ -155,6 +180,7 @@ k1 <- "radial"
 deg1 <- c(3)
 nu1 <- c(0.01, 0.1, 0.2, 0.4, 0.8)
 simrad <- simfun(x, k1, gam1, nu1, deg1) 
+plotfun(x, simrad)
 ```
 
 
