@@ -1,0 +1,160 @@
+---
+title: "Simulation study exploring changes in kernel, nu, gamma, degree"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+    theme: cosmo
+    toc_depth: 2
+---
+
+
+
+
+```{r lib}
+# source class1 function
+source("oneclass-pred.R")
+
+
+# Load libraries
+library(e1071)
+library(dplyr)
+library(mvtnorm)
+library(ggplot2)
+```
+
+
+
+
+```{r sim1}
+# Simulate data
+N <- 500
+mean1 <- 1 * c(10, 10)
+sig2 <- 1
+c1 <- 0.6
+corr <- cbind(c(1, c1), c(c1, 1))
+sigma1 <- sig2 * corr
+x <- rmvnorm(N, mean = mean1, sigma = sigma1)
+```
+
+
+# Plot of the simulated two dimensional data- this has two features
+
+```{r plot1}
+# Plot data
+plot(x[, 1], x[, 2], xlim = c(-1, 15), ylim = c(-1, 15))
+
+```
+
+
+
+
+
+```{r simfun}
+# function to simulate data
+simfun <- function(x, k1, gam1, nu1, deg1) {
+	svm_modelN <- list()
+	for(i in 1 : length(gam1)) {
+		svm_modelN[[i]] <- list()
+		for(j in 1 : length(nu1)) {
+			svm_modelN[[i]][[j]] <- list()
+			for(k in 1 : length(deg1)) {
+				
+				svm_modelN[[i]][[j]][[k]] <- svm(x, kernel = k1, scale = F, 
+					type = "one-classification", gamma = gam1[i], nu = nu1[j], degree = deg1[k])
+			}
+		}
+	}
+	svm_modelN
+}
+
+
+```
+
+
+
+```{r fun2}
+
+
+
+plotfun <- function(x, svm_modelN, gams = NULL, nus = NULL, degs = NULL) {
+	
+	# For each predicted plot
+	pred2 <- TRUE
+	xdat <- x
+	for(i in 1 : length(svm_modelN)) {
+		if(i > 1) {
+			xdat <- rbind(xdat, x)
+		}
+		pred2 <- c(pred2, predict(svm_modelN[[i]]))
+	}
+	pred2 <- pred2[-1]
+	# Specify colors based on predictions
+	cols <- ifelse(pred2, "Normal", "Anomalous")
+	cols2 <- brewer.pal(3, "Dark2")[1 : 2]
+	# Plot points by prediction
+	s1 <- sign(mean1[1])
+	lims <- sort(c(mean1[1] + s1 * 5, s1), decreasing = F)
+
+
+
+	type1 <- ifelse(is.null(gams), ifelse(is.null(nus), "Degree", "Nu"),  "Gamma")
+	type2 <- rep(c("Default", type2), each = nrow(x))
+	newdat <- data.frame(xdat, cols, paste0(type1, " = ", type2))
+	colnames(newdat) <- c("x1", "x2", "pred", "type")
+
+	ggplot(newdat, aes(x = x1, y = x2, col = pred)) + 
+		geom_point(size = 5) + 
+		facet_wrap( ~ type) +
+		theme_bw() +
+		theme(text = element_text(size = 20)) +
+
+		scale_colour_manual(name = "", values = cols2)
+}
+
+```
+
+# Linear kernel
+
+
+```{r lin}
+k1 <- "linear"
+deg1 <- c(3)
+nu1 <- c(0.01, 0.1, 0.2, 0.4, 0.8)
+gam1 <- c(0.01, 0.1, 1, 5)
+simlin <- simfun(x, k1, gam1, nu1, deg1) 
+```
+
+
+
+
+# Polynomial kernel
+
+
+```{r poly}
+k1 <- "polynomial"
+deg1 <- seq(3, 7)
+nu1 <- c(0.1, 0.2, 0.4)
+simpoly <- simfun(x, k1, gam1, nu1, deg1) 
+```
+
+# Sigmoid kernel
+
+
+```{r sig}
+k1 <- "sigmoid"
+deg1 <- c(3)
+simsig <- simfun(x, k1, gam1, nu1, deg1) 
+```
+
+# Radial basis function / gaussian kernel
+
+
+```{r rad}
+k1 <- "radial"
+deg1 <- c(3)
+nu1 <- c(0.01, 0.1, 0.2, 0.4, 0.8)
+simrad <- simfun(x, k1, gam1, nu1, deg1) 
+```
+
+
