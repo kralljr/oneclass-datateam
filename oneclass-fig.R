@@ -108,7 +108,8 @@ set.seed(10)
 samps <- sample(seq(1, nrow(xT2)), 50)
 newdat <- data.frame(xT2[samps, ])
 
-
+newdatxT <- xT2[-samps,]
+newdatxT <- data.frame(newdatxT[1 : 5, ])
 
 # Get exterior points
 xF <- x[!pred2, ]
@@ -130,7 +131,7 @@ newdat2 <- data.frame(xF[samps, ])
 colnames(newdat2) <- c("z1", "z2")
 colnames(newdat) <- c("x1", "x2")
 colnames(b1) <- c("b1", "b2")
-
+colnames(newdatxT) <- c("xt1", "xt2")
 
 
 
@@ -169,7 +170,8 @@ g2 <- g1 + geom_path(data = b1, aes(x = b1, y = b2), color = cols2[1], size = 5)
 
 # Plot discovered anomalous points
 g3 <- g2 + geom_point(data = newdat2, aes(x = z1, y = z2), colour = cols2[2], 
-	size = 5, shape = 8)
+	size = 5, shape = 8) +
+	geom_point(data = newdatxT, aes(x = xt1, y = xt2), colour = cols2[2], size = 5)
 
 
 png("oneclass-viz.png", height = 500, width = 1400)
