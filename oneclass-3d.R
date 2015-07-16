@@ -121,17 +121,18 @@ points(newdatxT[, 1], newdatxT[, 2], col = cols[2], cex = cex1)
 # Plot decision boundary, 3d
 plotfun3d(phi1 = 45, theta1 = 45, train1 = F, test1 = T, line1 = T, 
 	  main1 = "E. Estimated kernel function for new data")
-
-
+# Plot decision boundary, 3d
+plotfun3d(phi1 = 90, theta1 = 0, train1 = F, test1 = T, line1 = T, 
+	  main1 = "F. Classify new data", zlab = "")
 
 # Plot new data: 2d with decision
-plot(newdat2[, 1], newdat2[, 2], col = cols[2], xlab = "Feature 1", 
-     ylab = "Feature 2", cex = cex1, pch = "*", xlim = lims, ylim = lims, 
-     axes = F, main = "F. Classify new data")
-points(newdatxT[, 1], newdatxT[, 2], col = cols[2], cex = cex1)
-polygon(b1, border = cols[1], lwd = lwd1)
-legend("bottomright", legend = c("Normal", "Anomalous"), pch = c(1, 8), 
-       col = cols[2])
+#plot(newdat2[, 1], newdat2[, 2], col = cols[2], xlab = "Feature 1", 
+#     ylab = "Feature 2", cex = cex1, pch = "*", xlim = lims, ylim = lims, 
+#     axes = F, main = "F. Classify new data")
+#points(newdatxT[, 1], newdatxT[, 2], col = cols[2], cex = cex1)
+#polygon(b1, border = cols[1], lwd = lwd1)
+#legend("bottomright", legend = c("Normal", "Anomalous"), pch = c(1, 8), 
+#       col = cols[2])
 
 
 dev.off()
