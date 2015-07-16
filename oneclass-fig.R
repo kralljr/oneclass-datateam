@@ -82,10 +82,11 @@ x2 <- x1
 xs <- cbind(rep(x1, N), rep(x2, each = N))
 
 # Classify grid points
-c1 <- class1(xs, "radial", svm1 = svm_model)
+classT <- class1(xs, "radial", svm1 = svm_model, surf = T)
+classT1 <- classT[["out"]]
 
 # Get convex hull
-true <- xs[c1 == 1, ]
+true <- xs[classT1 == 1, ]
 b1 <- true[chull(true), ]
 b1 <- rbind(b1, b1[1, ])
 b1 <- data.frame(b1)
@@ -134,7 +135,8 @@ colnames(b1) <- c("b1", "b2")
 colnames(newdatxT) <- c("xt1", "xt2")
 
 
-
+# Save output
+save(newdat2, newdat, b1, newdatxT, classT, svm_model, xs, file = "preds_3d.RData")
 
 
 
