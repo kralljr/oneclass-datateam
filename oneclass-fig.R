@@ -182,4 +182,5 @@ dev.off()
 
 
 # To do: try 3-d plot
-
+#save plots
+save(g1, g2, g3, file = "gfigs.RData")
