@@ -3,7 +3,7 @@
 #' @param newxy new set of coordinates for x, y
 #' @param dat data used to train SVM
 #' @param kernel kernel specification 
-class1 <- function(newxy, kernel, dat = NULL, svm1 = NULL, type = "one-classification" ) {
+class1 <- function(newxy, kernel, dat = NULL, svm1 = NULL, type = "one-classification", surf = F ) {
     if(is.null(svm1)) {
         svm1 <- svm(dat, kernel = kernel, type = type, scale = F)
     }
@@ -40,7 +40,9 @@ class1 <- function(newxy, kernel, dat = NULL, svm1 = NULL, type = "one-classific
     val <- rowSums(val) - rho	
     # Get sign, is normal sample?
     out <- sign(val) == 1
-
+    if(surf == T) {
+	out <- list(out = out, surf = val)
+    }
     return(out)
 }
 
