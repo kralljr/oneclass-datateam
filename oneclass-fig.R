@@ -1,5 +1,19 @@
 # source class1 function
-source("oneclass-pred.R")
+source("~/Documents/Work/STRAND/oneclass-pred.R")
+
+# Change this directory path to where your data are stored
+mylib <- "~/Documents/Work/STRAND"
+
+
+
+# Load libraries
+#library(e1071)
+#library(dplyr)
+
+# Read in data
+#postal1 <- read.csv(file.path(mylib, "train.1.1.txt"))
+#postal2 <- read.csv(file.path(mylib, "train.2.2.txt"))
+
 
 
 # Load libraries
@@ -13,7 +27,7 @@ library(devtools)
 
 # May need to run this:
 #install_github("ropensci/plotly")
-library(plotly)
+#library(plotly)
 
 
 
@@ -144,8 +158,8 @@ colnames(newdatxT) <- c("xt1", "xt2")
 # Create figures
 
 # Upper and lower limits
-min1 <- 7
-max1 <- 13
+min1 <- 8
+max1 <- 12
 
 
 # Specify colors
@@ -159,23 +173,69 @@ g1 <- ggplot(newdat, aes(x = x1, y = x2)) +
 	geom_point(size = 5) +
 	theme_bw() +
 	xlab("Feature 1") + ylab("Feature 2") +
-	theme(text = element_text(size = 20))
+	theme(text = element_text(size = 20) 
+    	,plot.background = element_blank()
+   	,panel.grid.major = element_blank()
+   	,panel.grid.minor = element_blank()
+   	,panel.border = element_blank()
+   	,axis.text = element_blank()
+   	,axis.ticks = element_blank()
+  	)
+
 
 
 # Plot boundary
 g2 <- g1 + geom_path(data = b1, aes(x = b1, y = b2), color = cols2[1], size = 5) +
 	theme_bw() +
-	theme(text = element_text(size = 20))
-
-
-# Plot discovered anomalous points
-g3 <- g2 + geom_point(data = newdat2, aes(x = z1, y = z2), colour = cols2[2], 
+	xlab("Feature 1") + ylab("Feature 2") +
+	theme(text = element_text(size = 20)
+    	,plot.background = element_blank()
+   	,panel.grid.major = element_blank()
+   	,panel.grid.minor = element_blank()
+   	,panel.border = element_blank()
+   	,axis.text = element_blank()
+   	,axis.ticks = element_blank()
+   	)
+   	
+# Plot validation points
+g3 <- ggplot(newdat, aes(x = x1, y = x2)) + 
+	xlim(min1, max1) + ylim(min1, max1) +
+	geom_point(data = newdat2, aes(x = z1, y = z2), colour = cols2[2], 
 	size = 5, shape = 8) +
-	geom_point(data = newdatxT, aes(x = xt1, y = xt2), colour = cols2[2], size = 5)
+	geom_point(data = newdatxT, aes(x = xt1, y = xt2), colour = cols2[2], size = 5) +
+	geom_path(data = b1, aes(x = b1, y = b2), color = cols2[1], size = 5) +
+	theme_bw() +
+	xlab("Feature 1") + ylab("Feature 2") +
+	theme(text = element_text(size = 20) 
+    	,plot.background = element_blank()
+   	,panel.grid.major = element_blank()
+   	,panel.grid.minor = element_blank()
+   	,panel.border = element_blank()
+   	,axis.text = element_blank()
+   	,axis.ticks = element_blank()
+  	)
+
+# Plot discovered anomalous points over original points
+g4 <- g2 + geom_point(data = newdat2, aes(x = z1, y = z2), colour = cols2[2], 
+	size = 5, shape = 8) +
+	geom_point(data = newdatxT, aes(x = xt1, y = xt2), colour = cols2[2], size = 5) +
+	theme_bw() +
+	xlab("Feature 1") + ylab("Feature 2") +
+	theme(text = element_text(size = 20)
+    	,plot.background = element_blank()
+   	,panel.grid.major = element_blank()
+   	,panel.grid.minor = element_blank()
+   	,panel.border = element_blank()
+   	,axis.text = element_blank()
+   	,axis.ticks = element_blank()
+   	)
+
+
+
 
 
 png("oneclass-viz.png", height = 500, width = 1400)
-grid.arrange(g1, g2, g3, nrow = 1)
+grid.arrange(g1, g2, g3, g4, nrow = 1)
 dev.off()
 
 
