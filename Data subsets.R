@@ -2,7 +2,7 @@
 source("~/GitHub/oneclass-datateam/oneclass-pred.R")
 
 # Change this directory path to where your data are stored
-mylib <- "~/Documents/Work/STRAND/Data/"
+mylib <- "~/Documents/Work/oneclass/Data/"
 
 
 # Load libraries

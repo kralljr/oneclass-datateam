@@ -1,10 +1,10 @@
-# source class1 function
-source("~/Documents/Work/STRAND/oneclass-pred.R")
+
 
 # Change this directory path to where your data are stored
-mylib <- "~/Documents/Work/STRAND"
+mylib <- "~/Documents/Work/oneclass"
 
-
+# source class1 function
+source(file.path(mylib, "oneclass-pred.R"))
 
 # Load libraries
 #library(e1071)

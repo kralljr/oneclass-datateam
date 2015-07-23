@@ -2,7 +2,7 @@
 source("oneclass-pred.R")
 
 # Change this directory path to where your data are stored
-mylib <- "~/Dropbox/STRAND/data"
+mylib <- "~/Dropbox/oneclass/data"
 
 
 # Load libraries
