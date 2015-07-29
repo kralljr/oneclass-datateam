@@ -4,33 +4,41 @@ library(rpart)
 library(e1071)
 library(MASS)
 
-
+#Load data
 dataset <- read.csv("E:/thesis/SVM/hepatitis data csv.csv",header=T,sep=";")
 attach(dataset)
-index <- 1:nrow(dataset)
-testindex <- sample(index, trunc(length(index)*30/100))
-testset <- dataset[testindex,]
-trainset <- dataset[-testindex,]
-trainindex <- sample(index, trunc(length(index)*70/100))
-tuned <- tune.svm(class~., data = trainset, gamma = 10^(-6:-1), cost = 10^(-1:1))
-cc <- as.numeric(tuned$best.parameters[2])
-gg <- as.numeric(tuned$best.parameters[1])
 
+#Index and partition data
+index <- 1:nrow(dataset)
+     testindex <- sample(index, trunc(length(index)*30/100))
+     testset <- dataset[testindex,]
+     trainset <- dataset[-testindex,]
+trainindex <- sample(index, trunc(length(index)*70/100))
+
+#Tune svm to find best parameters
+tuned <- tune.svm(class~., data = trainset, gamma = 10^(-6:-1), cost = 10^(-1:1))
+     cc <- as.numeric(tuned$best.parameters[2])
+     gg <- as.numeric(tuned$best.parameters[1])
+
+#Train four kernal types of svm
 modelolin <- svm(class ~ ., trainset, type = "C-classification", cost = cc, gamma = gg, kernel = "linear")
 modelopoly <- svm(class ~ ., trainset, type = "C-classification", cost = cc, gamma = gg, kernel = "polynomial")
 modelorad <- svm(class ~ ., trainset, type = "C-classification", cost = cc,gamma = gg, kernel = "radial")
 modelotan <- svm(class ~ ., trainset, type = "C-classification", cost = cc,gamma = gg, kernel = "sigmoid")
 
+#Predict all svm types
 prediction1<- predict(modelolin,newdata=testset, decision.values=F)
 prediction2<- predict(modelopoly,newdata=testset, decision.values=F)
 prediction3<- predict(modelorad,newdata=testset, decision.values=F)
 prediction4<- predict(modelotan,newdata=testset, decision.values=F)
 
+#Visualize tables of predictions
 tab1 <- table(pred = prediction1,testset$class)
 tab2 <- table(pred = prediction2,testset$class)
 tab3 <- table(pred = prediction3,testset$class)
 tab4 <- table(pred = prediction4,testset$class)
 
+#Calculate some sort of average or AUC?
 ecr1<-(tab1[2,1]+tab1[1,2])/sum(tab1)
 ecr2<-(tab2[2,1]+tab2[1,2])/sum(tab2)
 ecr3<-(tab3[2,1]+tab3[1,2])/sum(tab3)
@@ -39,55 +47,70 @@ ecr4<-(tab4[2,1]+tab4[1,2])/sum(tab4)
 classAgreement(tab)
 
 
+
+
 #Bagging EnSVM
 library(colorspace)
 library(rpart)
 library(e1071)
 library(MASS)
 
+#Load dataset
 dataset <- read.csv("E:/thesis/SVM/hepatitis data csv.csv",header=T,sep=";")
- attach(dataset)
- m<-10
- k<-10
+     attach(dataset)
+     m<-10
+     k<-10
+
+#Index and partition data
 index <- 1:nrow(dataset)
- testindex <- sample(index, trunc(length(index)*30/100))
- testset <- dataset[testindex,]
- trainset <- dataset[-testindex,]
+
+testindex <- sample(index, trunc(length(index)*30/100))
+     testset <- dataset[testindex,]
+     trainset <- dataset[-testindex,]
 trainindex<- sample(index, trunc(length(index)*70/100))
 
- es<-numeric(m)
- eb<-matrix(nrow=m,ncol=k)
+     es<-numeric(m)
+     eb<-matrix(nrow=m,ncol=k)
 
- eslin<-numeric(m)
- espoly<-numeric(m)
- esrad<-numeric(m)
- estan<-numeric(m)
+     eslin<-numeric(m)
+     espoly<-numeric(m)
+     esrad<-numeric(m)
+     estan<-numeric(m)
 
+#Create kernal type matrices
 eblin<-matrix(nrow=m,ncol=k)
 ebpoly<-matrix(nrow=m,ncol=k)
 ebrad<-matrix(nrow=m,ncol=k)
 ebtan<-matrix(nrow=m,ncol=k)
 
+#Begin bagging procedure
 set.seed(123)
 for (i in 1:m){
+
+     #Index and partition data
      index <- 1:nrow(dataset)
      testindex <- sample(index, trunc(length(index)*30/100))
-     testset <- dataset[testindex,]
-     trainset <- dataset[-testindex,]
-     tuned <- tune.svm(class~., data = trainset, gamma = 10^(-6:-1), cost = 10^(-1:1))
-     cc <- as.numeric(tuned$best.parameters[2])
-     gg <- as.numeric(tuned$best.parameters[1])
+          testset <- dataset[testindex,]
+          trainset <- dataset[-testindex,]
 
+     #Tune best svm parameters
+     tuned <- tune.svm(class~., data = trainset, gamma = 10^(-6:-1), cost = 10^(-1:1))
+          cc <- as.numeric(tuned$best.parameters[2])
+          gg <- as.numeric(tuned$best.parameters[1])
+
+     #Train svms for four kernal types
      modellin <- svm(class ~ ., trainset, type = "C-classification", cost = cc, gamma = gg, kernel = "linear")
      modelpoly <- svm(class ~ ., trainset, type = "C-classification", cost = cc, gamma = gg, kernel = "polynomial")
      modelrad <- svm(class ~ ., trainset, type = "C-classification", cost = cc,gamma = gg, kernel = "radial")
      modeltan <- svm(class ~ ., trainset, type = "C-classification", cost = cc,gamma = gg, kernel = "sigmoid")
 
+     #Predict outcomes for each type
      prediction1<- predict(modellin,newdata=testset, decision.values=F)
      prediction2<- predict(modelpoly,newdata=testset, decision.values=F)
      prediction3<- predict(modelrad,newdata=testset, decision.values=F)
      prediction4<- predict(modeltan,newdata=testset, decision.values=F)
 
+     #Calculate accuracy for each type
      no1<-sum(prediction1==0)
      yes1<-sum(prediction1==1)
      vote1<-c()
@@ -108,28 +131,33 @@ for (i in 1:m){
      vote4<-c()
      if(yes4>no4) vote4<-1 else vote4<-0
 
+     #Create tables of outcomes
      tab1 <- table(pred = prediction1,testset$class)
      tab2 <- table(pred = prediction2,testset$class)
      tab3 <- table(pred = prediction3,testset$class)
      tab4 <- table(pred = prediction4,testset$class)
 
+     #Calculate some sort of average or AUC?
      ecr1<-(tab1[2,1]+tab1[1,2])/sum(tab1)
      ecr2<-(tab2[2,1]+tab2[1,2])/sum(tab2)
      ecr3<-(tab3[2,1]+tab3[1,2])/sum(tab3)
      ecr4<-(tab4[2,1]+tab4[1,2])/sum(tab4)
 
+     #Not sure?
      eslin[i]<-ecr1
      espoly[i]<-ecr2
      esrad[i]<-ecr3
      estan[i]<-ecr4
 
      set.seed(123)
+
+     #Same procedure for other data
      for (j in 1:k) {
           boot<-sample(trainindex,replace=TRUE)
           sboot<-trainset[boot,]
           tuned <- tune.svm(class~., data = sboot, gamma = 10^(-6:-1), cost = 10^(-1:1))
-          cc <- as.numeric(tuned$best.parameters[2])
-          gg <- as.numeric(tuned$best.parameters[1])
+               cc <- as.numeric(tuned$best.parameters[2])
+               gg <- as.numeric(tuned$best.parameters[1])
 
           modellin1 <- svm(class ~ ., sboot, type = "C-classification", cost = cc, gamma = gg, kernel = "linear")
           modelpoly2 <- svm(class ~ ., sboot, type = "C-classification", cost = cc, gamma = gg, kernel = "polynomial")

@@ -1,12 +1,13 @@
 library(caret)
 library(e1071)
 
+#Call original svmBag functions
 str(svmBag)
 svmBag$fit
 svmBag$pred
 svmBag$aggregate
 
-#Define custom bagging svm function using svm package of our choosing
+#Define custom bagging svm function using svm package of our choosing {fit, pred, aggregate}
 bsvm.fit <- function (x, y, ...)
      {
          loadNamespace("e1071")
@@ -59,6 +60,7 @@ bagctrl <- bagControl(fit = bsvm.fit,
                       aggregate = bsvm.aggregate)
 
 
+#Evaluate bagged function
 set.seed(300)
 svmbag <- train(default ~ ., data = _______, "bag", trControl = ctrl, bagControl = bagctrl)
 svmbag
