@@ -1,4 +1,4 @@
-# load libraries
+#load libraries
 library(e1071)
 
 
@@ -118,5 +118,6 @@ save(class1, file = "sim-tune-svm.RData")
 
 
 # Compare classification on ensemble vs. full
-
-
+start <- proc.time()
+svm(datsub[, -1], kernel = "radial", scale = F, type = "one-classification")
+stop <- proc.time()
