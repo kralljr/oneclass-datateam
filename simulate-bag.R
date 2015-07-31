@@ -106,15 +106,16 @@ train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
 
 # Run bagged
 set.seed(20987)
-b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
-
+#b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
+#save(b1, file = "sim-tune.RData")
 
 # Run svm on entire subsample
+set.seed(59010)
 svm1 <- tune.svm(y ~ ., data = datsub, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
 class1 <- predict(svm1$best.model, valid)
+save(class1, file = "sim-tune-svm.RData")
 
 
-save(b1, file = "sim-tune.RData")
 
 # Compare classification on ensemble vs. full
 
