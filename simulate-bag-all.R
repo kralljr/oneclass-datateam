@@ -19,6 +19,5 @@ cost1 <- seq(0.01, 1, by = 0.1)
 # Run svm on entire subsample
 set.seed(59010)
 svm1 <- tune.svm(y ~ ., data = datsub, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
-class1 <- predict(svm1$best.model, valid)
-save(class1, file = "sim-tune-svm.RData")
+save(svm1, file = "sim-tune-svm.RData")
 
