@@ -109,15 +109,3 @@ set.seed(20987)
 #b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
 #save(b1, file = "sim-tune.RData")
 
-# Run svm on entire subsample
-set.seed(59010)
-svm1 <- tune.svm(y ~ ., data = datsub, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
-class1 <- predict(svm1$best.model, valid)
-save(class1, file = "sim-tune-svm.RData")
-
-
-
-# Compare classification on ensemble vs. full
-start <- proc.time()
-svm(datsub[, -1], kernel = "radial", scale = F, type = "one-classification")
-stop <- proc.time()
