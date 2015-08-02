@@ -6,7 +6,7 @@ source("data-samplelabel.R")
 
 
 # Create smaller data
-N <- 100
+N <- 20000
 datsub <- dat1[1 : N, ]
 valid <- dat1[(N + 1) : (N * 2), ]
 
