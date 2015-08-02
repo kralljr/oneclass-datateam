@@ -1,6 +1,5 @@
 #load libraries 
 library(e1071)
-library(dplyr)
 
 # get data
 source("data-samplelabel.R")
