@@ -106,6 +106,6 @@ train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
 
 # Run bagged
 set.seed(20987)
-#b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
-#save(b1, file = "sim-tune.RData")
+b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
+save(b1, file = "sim-tune.RData")
 
