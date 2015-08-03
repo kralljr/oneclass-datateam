@@ -25,7 +25,7 @@ library(RColorBrewer)
 library(knitr)
 
 
-opts_chunk$set(message = F, fig.align = "center", warning = F, echo = F, fig.width = 15, fig.height = 15)
+opts_chunk$set(message = F, fig.align = "center", warning = F, echo = F, fig.width = 20, fig.height = 40)
 
 ```
 
@@ -64,7 +64,7 @@ plot(x[, 1], x[, 2], xlim = c(-1, 15), ylim = c(-1, 15))
 #' @param gam1 gamma
 #' @param nu1 nu
 #' @param deg1 degree
-simfun <- function(x, k1, gam1, nu1, deg1) {
+simfun <- function(x, k1, gam1, nu1, deg1, co1) {
 	types <- "0"
 	svm_modelN <- list()
 	for(i in 1 : length(gam1)) {
@@ -72,10 +72,14 @@ simfun <- function(x, k1, gam1, nu1, deg1) {
 		for(j in 1 : length(nu1)) {
 			svm_modelN[[i]][[j]] <- list()
 			for(k in 1 : length(deg1)) {
-				type1 <- paste0("Gam=", gam1[i], ", Nu=", nu1[j], ", Deg=", deg1[k]) 
+				
+				svm_modelN[[i]][[j]][[k]] <- list()
+				for(c1 in 1 : length(co1)) {
+				type1 <- paste0("Gam=", gam1[i], ", Nu=", nu1[j],  ", Cost=", co1[c1]) 
 			        types <- c(types, rep(type1, nrow(x)))	
-				svm_modelN[[i]][[j]][[k]] <- svm(x, kernel = k1, scale = F, 
+				svm_modelN[[i]][[j]][[k]][[c1]] <- svm(x, kernel = k1, scale = F, cost = co1[c1],
 					type = "one-classification", gamma = gam1[i], nu = nu1[j], degree = deg1[k])
+				}
 			}
 		}
 	}
@@ -104,13 +108,14 @@ plotfun <- function(x, svm_model_out) {
 	for(i in 1 : length(svm_modelN)) {
 		for(j in 1 : length(svm_modelN[[i]])) {
 			for(k in 1 : length(svm_modelN[[i]][[j]])) {
+				for(c1 in 1 : length(svm_modelN[[i]][[j]][[k]])) {
 
-
-			if(l > 1) {
-				xdat <- rbind(xdat, x)
-			}
-			pred2 <- c(pred2, predict(svm_modelN[[i]][[j]][[k]]))
-			l <- l + 1
+					if(l > 1) {
+						xdat <- rbind(xdat, x)
+					}
+					pred2 <- c(pred2, predict(svm_modelN[[i]][[j]][[k]][[c1]]))
+					l <- l + 1
+				}
 			}
 		}
 	}
@@ -128,7 +133,7 @@ plotfun <- function(x, svm_model_out) {
 
 	ggplot(newdat, aes(x = x1, y = x2, col = pred)) + 
 		geom_point(size = 5) + 
-		facet_wrap( ~ types, ncol = 4) +
+		facet_wrap( ~ types, ncol = 5) +
 		theme_bw() +
 		theme(text = element_text(size = 20)) +
 
@@ -145,7 +150,8 @@ k1 <- "linear"
 deg1 <- c(3)
 nu1 <- c(0.01, 0.1, 0.2, 0.4, 0.8)
 gam1 <- c(0.01, 0.1, 1, 5)
-simlin <- simfun(x, k1, gam1, nu1, deg1) 
+co1 <- c(0.01, 1, 100, 500, 1000)
+simlin <- simfun(x, k1, gam1, nu1, deg1, co1) 
 plotfun(x, simlin)
 ```
 
@@ -155,21 +161,21 @@ plotfun(x, simlin)
 # Polynomial kernel
 
 
-```{r poly, fig.height = 30}
+```{r poly, fig.height = 30, eval = F}
 k1 <- "polynomial"
 deg1 <- seq(3, 7)
 nu1 <- c(0.1, 0.2, 0.4)
-simpoly <- simfun(x, k1, gam1, nu1, deg1) 
+simpoly <- simfun(x, k1, gam1, nu1, deg1, co1) 
 plotfun(x, simpoly)
 ```
 
 # Sigmoid kernel
 
 
-```{r sig}
+```{r sig, eval = F}
 k1 <- "sigmoid"
 deg1 <- c(3)
-simsig <- simfun(x, k1, gam1, nu1, deg1) 
+simsig <- simfun(x, k1, gam1, nu1, deg1, co1) 
 plotfun(x, simsig)
 ```
 
@@ -180,7 +186,7 @@ plotfun(x, simsig)
 k1 <- "radial"
 deg1 <- c(3)
 nu1 <- c(0.01, 0.1, 0.2, 0.4, 0.8)
-simrad <- simfun(x, k1, gam1, nu1, deg1) 
+simrad <- simfun(x, k1, gam1, nu1, deg1, co1) 
 plotfun(x, simrad)
 ```
 
