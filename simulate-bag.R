@@ -77,11 +77,11 @@ geterrs <- function(class1, valid) {
 	
 	# FP: Given normal, call attack
 	type1 <- class1[true_class == "Normal"] 
-	type1 <- length(which(fp == 0)) / length(fp)
+	type1 <- length(which(type1 == 0)) / length(type1)
 	
 	# FN: Given attack, call normal
 	type2 <- class1[true_class == "Attack"] 
-	type2 <- length(which(fp == 1)) / length(fp)
+	type2 <- length(which(type2 == 1)) / length(type2)
 	
 	# Get output
 	out <- c(type1, type2)
@@ -106,6 +106,6 @@ train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
 
 # Run bagged
 set.seed(20987)
-b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
-save(b1, file = "sim-tune.RData")
+#b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
+#save(b1, file = "sim-tune.RData")
 
