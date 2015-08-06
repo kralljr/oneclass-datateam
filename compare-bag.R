@@ -12,7 +12,7 @@ ens1 <- b1$ens
 
 # predict on total
 tot1 <- predict(svm1$best.model, valid)
-
+tot1 <- 1 - 1 * tot1
 
 # nu small = no outliers allowed
 # gamma small = large variance on kernel
