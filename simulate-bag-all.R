@@ -6,15 +6,18 @@ source("data-samplelabel.R")
 
 
 # Create smaller data
-N <- 20000
+N <- 10000
 datsub <- dat1[1 : N, ]
 valid <- dat1[(N + 1) : (N * 2), ]
 
 
 # Get training parameters
-gam1 <- seq(.01, .2, by = .02)
+gam1 <- seq(0, 5, by = 1)
 nu1 <- seq(.01, .2, by = .02)
-cost1 <- seq(0.01, 1, by = 0.1)
+#cost1 <- seq(0.01, 1, by = 0.1)
+cost1 <- 1
+nu1 <- 0.001
+
 
 # Run svm on entire subsample
 set.seed(59010)
