@@ -101,11 +101,13 @@ valid <- dat1[20001 : 40000, ]
 # Get training parameters
 gam1 <- seq(.01, .2, by = .02)
 nu1 <- seq(.01, .2, by = .02)
-cost1 <- seq(0.01, 1, by = 0.1)
+cost1 <- 1
+#cost1 <- seq(0.01, 1, by = 0.1)
 train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
 
 # Run bagged
 set.seed(20987)
-#b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
-#save(b1, file = "sim-tune.RData")
+b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
+type <- "Simulated labels with only first two columns"
+save(b1,type, file = "sim-tune-simple.RData")
 
