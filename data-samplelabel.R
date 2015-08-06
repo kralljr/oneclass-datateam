@@ -23,7 +23,8 @@ y <- rbinom(length(mean), 1, mean)
 
 # Try thresholding
 yfun <- function(x) {
-	out <- 1 * ((x[1] < 20) & (x[2] < 100)) & x[3]  < 2
+	#out <- 1 * ((x[1] < 20) & (x[2] < 100)) & x[3]  < 2
+	out <- 1 * (x[1] < 20 & x[2] < 100)
 	abs(1 - out)
 }
 

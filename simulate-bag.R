@@ -53,7 +53,10 @@ innerbag <- function(dat, valid, size, N, gam1, nu1, cost1) {
 	
 	# Tune
 	# start <- proc.time()
-	tune1 <- tune.svm(y ~ ., data = dats, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
+	x1 <- dats[dats$y == "Normal", ]
+	validx <- valid[, -1]
+	validy <- valid[, 1]
+	tune1 <- tune.svm(y ~ ., data = x1, validation.x = validx, validation.y = validy, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
 	#
 	# stop <- proc.time()
 	# (stop - start)[3]
@@ -92,15 +95,16 @@ geterrs <- function(class1, valid) {
 
 
 # Create smaller data
-datsub <- dat1[1 : 20000, ]
+seq1 <- sample(seq(1, nrow(dat1)), 20000)
+datsub <- dat1[seq1[1 : 10000], ]
 
-valid <- dat1[20001 : 40000, ]
+valid <- dat1[seq1[10001 : 20000], ]
 
 
 
 # Get training parameters
-gam1 <- seq(.01, .2, by = .02)
-nu1 <- seq(.01, .2, by = .02)
+gam1 <- seq(.01, 5, by = .5)
+nu1 <- seq(.0001, 1, by = .1)
 cost1 <- 1
 #cost1 <- seq(0.01, 1, by = 0.1)
 train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
@@ -111,3 +115,8 @@ b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
 type <- "Simulated labels with only first two columns"
 save(b1,type, file = "sim-tune-simple.RData")
 
+
+x1 <- datsub[datsub$y == "Normal", -1]
+svm1 <- svm(x1, kernel = "radial", type = "one-classification", scale = T, nu = .5, gamma = .5)
+p1 <- predict(svm1, valid[, -1])
+table(p1, valid$y)
