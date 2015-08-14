@@ -2,121 +2,77 @@
 library(e1071)
 
 
+
+
+# get bootstrap/bagging functions
+source("bag-fun.R")
+
+
+
+
+
+
 # get data
 source("data-samplelabel.R")
-
-bagsvm <- function(dat, valid, size, nboot, train1 = NULL) {
-	# Number of rows
-	N <- nrow(dat)
-	
-	# Save output
-	classmat <- matrix(nrow = nrow(valid), ncol = nboot)
-	params <- matrix(nrow = 3, ncol = nboot)
-	
-	# Get training values
-	if(is.null(train1)) {
-		gam1 <- seq(.1, .2, by = .1)
-		nu1 <- seq(.1, .2, by = .1)
-		cost1 <- seq(100, 1000, by = 100)
-	}else{
-		gam1 <- train1$gam1
-		nu1 <- train1$nu1
-		cost1 <- train1$cost1
-		
-	}
-	
-	# For each bootstrapped sample
-	for(i in 1 : nboot) {
-		print(i)
-		# Do one svm
-		ib1 <- innerbag(dat, valid, size, N, gam1, nu1, cost1)
-		# Save output
-		classmat[, i] <- ib1$class1
-		params[, i] <- ib1$param
-	}
-	
-	# Get summary of classmat
-	ens <- round(apply(classmat, 1, mean))
-	
-	# Return output
-	out <- list(ens = ens, class = classmat, params = params)
-	return(out)
-}
-
-
-innerbag <- function(dat, valid, size, N, gam1, nu1, cost1) {
-	
-	# subsample
-	sample1 <- sample(seq(1, N), size = size, replace = T)
-	dats <- dat[sample1, ]
-
-	
-	# Tune
-	# start <- proc.time()
-	x1 <- dats[dats$y == "Normal", ]
-	validx <- valid[, -1]
-	validy <- valid[, 1]
-	tune1 <- tune.svm(y ~ ., data = x1, validation.x = validx, validation.y = validy, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
-	#
-	# stop <- proc.time()
-	# (stop - start)[3]
-
-	# Predict on validation
-	class1 <- predict(tune1$best.model, valid)
-	
-	# Get params
-	param <- as.matrix(tune1$best.parameters)
-	
-	# Get output
-	out <- list(param = param, class1 = class1)
-	return(out)
-	
-}
-
-
-
-geterrs <- function(class1, valid) {
-	true_class <- valid$y
-	
-	# FP: Given normal, call attack
-	type1 <- class1[true_class == "Normal"] 
-	type1 <- length(which(type1 == 0)) / length(type1)
-	
-	# FN: Given attack, call normal
-	type2 <- class1[true_class == "Attack"] 
-	type2 <- length(which(type2 == 1)) / length(type2)
-	
-	# Get output
-	out <- c(type1, type2)
-	names(out) <- c("type1", "type2")
-	
-	return(out)
-}
-
 
 # Create smaller data
 seq1 <- sample(seq(1, nrow(dat1)), 20000)
 datsub <- dat1[seq1[1 : 10000], ]
-
 valid <- dat1[seq1[10001 : 20000], ]
 
 
-
 # Get training parameters
-gam1 <- seq(.01, 5, by = .5)
+gam1 <- seq(.01, 1, by = .1)
 nu1 <- seq(.0001, 1, by = .1)
 cost1 <- 1
-#cost1 <- seq(0.01, 1, by = 0.1)
 train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
 
 # Run bagged
 set.seed(20987)
-b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1)
+b1 <- bagsvm(datsub, valid, size = 500, nboot = 10, train1 = train1)
 type <- "Simulated labels with only first two columns"
-save(b1,type, file = "sim-tune-simple.RData")
+save(b1, type, file = "sim-tune-simple.RData")
 
 
-x1 <- datsub[datsub$y == "Normal", -1]
-svm1 <- svm(x1, kernel = "radial", type = "one-classification", scale = T, nu = .5, gamma = .5)
+
+
+
+
+################################
+# Try with simulated data
+
+
+set.seed(10)
+x1 <- rnorm(1000)
+x2 <- rnorm(1000)
+y <-  (x1 < 0 & x2 < 0)
+#y <- factor(y, levels = c(1, 0), labels = c("Normal", "Attack"))
+dat1 <- data.frame(y, x1, x2)
+datsub <- dat1[1 : 500, ]
+valid <- dat1[501:1000, ]
+
+x1n <- datsub[datsub$y == "Normal", -1]
+
+
+# Try by itself (no tuning)
+#x1 <- datsub[datsub$y == "Normal", -1]
+x1 <- datsub[datsub$y, -1]
+svm1 <- svm(x1, kernel = "radial", type = "one-classification", scale = T, nu = .0001, gamma = .1)
+p1 <- predict(svm1, valid[, -1])
+table(p1, valid$y)
+
+
+
+# Try with tuning
+#x1 <- datsub[datsub$y == "Normal", ]
+x1 <- datsub[datsub$y, ]
+
+tc <- tune.control(sampling = "fix", error.fun = type1a)
+tune1 <- tune.svm(y ~ x1 + x2, data = dat1, validation.x = valid[, -1], 
+    validation.y = valid[, 1], nu = nu1, gamma = gam1, cost = cost1, 
+    kernel = "radial", type = "one-classification", scale = T,
+    tunecontrol = tc)
+
+svm1 <- tune1$best.model
 p1 <- predict(svm1, valid[, -1])
 table(p1, valid$y)
