@@ -24,8 +24,7 @@ y <- rbinom(length(mean), 1, mean)
 # Try thresholding
 yfun <- function(x) {
 	#out <- 1 * ((x[1] < 20) & (x[2] < 100)) & x[3]  < 2
-	out <- 1 * (x[1] < 20 & x[2] < 100)
-	abs(1 - out)
+	out <-  (x[1] > 20 | x[2] > 100)
 }
 
 y <- apply(dat, 1, yfun)
@@ -34,7 +33,7 @@ y <- apply(dat, 1, yfun)
 
 
 # Label y
-y <- factor(y, levels = c(0, 1), labels = c("Attack", "Normal"))
+#y <- factor(y, levels = c(0, 1), labels = c("Attack", "Normal"))
 table(y) / length(y)
 
 
