@@ -21,6 +21,11 @@ nu1 <- 0.001
 
 # Run svm on entire subsample
 set.seed(59010)
-svm1 <- tune.svm(y ~ ., data = datsub, nu = nu1, gamma = gam1, cost = cost1, kernel = "radial", type = "one-classification", scale = T)
+
+tc <- tune.control(sampling = "fix", error.fun = NULL)
+tune1 <- tune.svm(y ~ ., data = datsub, validation.x = validx,
+    validation.y = validy, nu = nu1, gamma = gam1, cost = cost1,
+    kernel = "radial", type = "one-classification", scale = T,
+    tunecontrol = tc)
 save(svm1, file = "sim-tune-svm.RData")
 
