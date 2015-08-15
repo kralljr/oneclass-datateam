@@ -3,13 +3,8 @@ library(e1071)
 
 
 
-
 # get bootstrap/bagging functions
 source("bag-fun.R")
-
-
-
-
 
 
 # get data
@@ -29,9 +24,26 @@ train1 <- list(gam1 = gam1, nu1 = nu1, cost1 = cost1)
 
 # Run bagged
 set.seed(20987)
-b1 <- bagsvm(datsub, valid, size = 500, nboot = 10, train1 = train1)
+m1 <- function(true, class1) {mixtype(true, class1, .75)}
+b1 <- bagsvm(datsub, valid, size = 500, nboot = 100, train1 = train1, ef = m1)
 type <- "Simulated labels with only first two columns"
 save(b1, type, file = "sim-tune-simple.RData")
+
+
+
+
+
+# Check results
+load("sim-tune-simple.RData")
+geterrs(b1$ens, valid)
+
+
+
+
+
+
+
+
 
 
 
