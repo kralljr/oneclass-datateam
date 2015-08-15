@@ -57,9 +57,9 @@ innerbag <- function(dat, valid, size, N, gam1, nu1, cost1, ef) {
 
 	tc <- tune.control(sampling = "fix", error.fun = ef)
 	tune1 <- tune.svm(y ~ ., data = dat1, validation.x = validx, 
-			  validation.y = validy, nu = nu1, gamma = gam1, cost = cost1, 
-			  kernel = "radial", type = "one-classification", scale = T,
-			  tunecontrol = tc)
+	    validation.y = validy, nu = nu1, gamma = gam1, cost = cost1, 
+	    kernel = "radial", type = "one-classification", scale = T,
+	    tunecontrol = tc)
 
 	# stop <- proc.time()
 	# (stop - start)[3]
@@ -109,7 +109,7 @@ geterrs <- function(class1, valid) {
 
 
 
-type1a <- function(true, class1) {
+type1 <- function(true, class1) {
 	# which normal
 	class2 <- class1[true]
 	# which attack | normal
@@ -128,4 +128,10 @@ type2 <- function(true, class1) {
 	t1
 }
 
+mixtype <- function(true, class1, w) {
+	type1U <- type1(true, class1)
+       type2U <- type2(true, class1)
+	out <- (1 - w) * type1U + w * type2U
+	return(out)       
 
+}
