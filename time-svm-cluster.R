@@ -13,7 +13,7 @@ source("data-samplelabel.R")
 # Create smaller data
 
 nsize <- (nrow(dat1) - 1) / 2 - 1
-seq1 <- sample(seq(1, nrow(dat1)), nsize)
+seq1 <- sample(seq(1, nrow(dat1)), nsize * 2)
 datsub <- dat1[seq1[1 : nsize], ]
 valid <- dat1[seq1[(nsize + 1) : (nsize * 2)], ]
 
@@ -58,6 +58,22 @@ svm_model <- svm(dat1[, -1], kernel = "radial", scale = T, type = "one-classific
 p1 <- predict(svm_model, validx)
 t1 <- table(p1, validy)
 sum(t1 - diag(diag(t1))) / nrow(validx)
+
+
+y <- proc.time()
+
+y - x
+
+
+
+
+
+
+
+
+# All data 
+x <- proc.time()
+svm_model <- svm(datsub[, -1], kernel = "radial", scale = T, type = "one-classification", gamma = 0.01, nu = 0.0001)
 
 
 y <- proc.time()
