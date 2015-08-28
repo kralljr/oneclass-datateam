@@ -80,3 +80,26 @@ y <- proc.time()
 
 y - x
 
+
+
+# Tune for all
+
+
+x <- proc.time()
+
+# Tune
+# start <- proc.time()
+dat1 <- datsub[datsub$y, ]
+validx <- valid[, -1]
+validy <- valid[, 1]
+
+ef <- NULL
+tc <- tune.control(sampling = "fix", error.fun = ef)
+tune1 <- tune.svm(y ~ ., data = dat1, validation.x = validx,
+  validation.y = validy, nu = nu1, gamma = gam1, cost = cost1,
+ kernel = "radial", type = "one-classification", scale = T,
+ tunecontrol = tc)
+
+y <- proc.time()
+
+y - x
