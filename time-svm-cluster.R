@@ -82,6 +82,39 @@ y - x
 
 
 
+
+
+
+# All data: my tune
+x <- vector()
+y <- vector()
+names1 <- vector()
+i <- 1
+for(k in 1 : length(gam1)) {
+	for(j in 1 : length(nu1)) {
+	print(i)
+	x[i] <- proc.time()[3]
+	svm_model <- svm(datsub[, -1], kernel = "radial", scale = T, type = "one-classification", gamma = gam1[k], nu = nu1[j])
+
+
+	y[i] <- proc.time()[3]
+	names1[i] <- paste(gam1[k], ":", nu1[j])
+	i <- i + 1
+
+}}
+y - x
+
+
+
+
+
+
+
+
+
+
+
+
 # Tune for all
 
 
