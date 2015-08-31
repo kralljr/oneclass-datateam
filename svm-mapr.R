@@ -7,14 +7,14 @@
 #
 # This is the function to do tuning for each bootstrapped sample
 # @param k key is iteration of bootstrapping
-# @param bootdat value is bootstrapped dataset
-svmboot.map <- function(k, bootdat) {
+svmboot.map <- function(., k) {
 
 
   # create bootstrapped datai?
   # I think this should be done outside of map?
-  #samps <- sample(1 : nrow(dat), sizeboot, replace = T)
-  #bootdat <- dat[samps, ]
+  set.seed(k)
+  samps <- sample(1 : nrow(dat), sizeboot, replace = T)
+  bootdat <- dat[samps, ]
 
   # specify range of parameters
   gam1 <- seq(.01, 1, by = .1)
@@ -36,7 +36,7 @@ svmboot.map <- function(k, bootdat) {
   out1 <- tune1$best.parameters
 
   # return something
-  keyval(k, out)
+  keyval(k, out1)
 }
 
 
@@ -61,11 +61,9 @@ svmboot.reduce <- function(k, vv) {
 ######################
 # Full mapreduce function
 #
-# Specify number of jobs/ bootstrapped samples
-nboot= to.dfs(1 : 1000)
-
-# I think input should be bootstrapped datasets...
-# Not sure how to specify this
+# Specify seeds for jobs/ bootstrapped samples
+seeds <- sample(seq(1, 100000), 1000)
+nboot= to.dfs(seeds)
 #
 # Function of total training and validation data, number of bootstraps and size of bootstraps
 svmboot.mr <- function(dat, valid, numboot, sizeboot, combine) {
