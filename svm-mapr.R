@@ -32,11 +32,11 @@ svmboot.map <- function(., k) {
     kernel = "radial", type = "one-classification", scale = T,
     tunecontrol = tc)
 
-  # find best parameters for this dataset
+  # find best parameters for this dataset (length 2)
   out1 <- tune1$best.parameters
 
-  # return something
-  keyval(k, out1)
+  # return key/val pairs for each parameter
+  keyval(c(1, 2), out1)
 }
 
 
@@ -66,6 +66,7 @@ seeds <- sample(seq(1, 100000), 1000)
 nboot= to.dfs(seeds)
 #
 # Function of total training and validation data, number of bootstraps and size of bootstraps
+# combine = T specifies same combiner as reduce
 svmboot.mr <- function(dat, valid, numboot, sizeboot, combine) {
   # split validation data
   validx <- valid[, -1]
@@ -73,8 +74,9 @@ svmboot.mr <- function(dat, valid, numboot, sizeboot, combine) {
   fds <- from.dfs(
 	 mapreduce(dat, validx, validy, sizeboot,
 		   input = nboot, 
-		   map = svmboot.map, 
-		   reduce = svmboot.reduce))
+		   map = svmboot.map))
+                  # Reduce not necessary here 
+		   #reduce = svmboot.reduce
   # get values from.dfs
   vals <- values(fds)
 
