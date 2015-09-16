@@ -1,6 +1,40 @@
 
-#' Function to apply attack labels
+
+
+#' Functions to apply attack labels
 #'
+#' \code{labelall} Label all datasets
+#' 
+#' This function labels all datasets, and appends them togther
+#' 
+#' @param valid1 list of filenames for validation datasets
+#' @param test1 list of filenames for test datasets
+labelall <- function(valid1, test1) {
+  for(i in 1 : length(valid1)) {
+    dat1 <- getlabel(valid1[i])
+    if(i == 1) {
+      valid <- dat1
+    }else{
+      valid <- full_join(dat1, valid)
+    }
+  }
+
+
+  for(i in 1 : length(test1)) {
+    
+    dat1 <- getlabel(test1[i], type = "test" )
+    if(i == 1) {
+      test <- dat1
+    }else{
+      test <- full_join(dat1, test)
+    }
+
+  }
+  return(list(test= test, valid = valid))
+}
+
+
+#' 
 #' \code{getlabel} Read in data and apply labels
 #'
 #' This function takes the filename, and some other information
@@ -9,7 +43,7 @@
 #' @param filename name of validation or test data
 #' @param type validation or test data, default "valid"
 #' @param plusminus number of seconds in window (+/-)
-getlabel <- function(filename, type = "valid", plusminus = 30) {
+getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
   # read in data
   dat <- read.csv(filename, header = F, stringsAsFactors = F)
   colnames(dat)[1 : 2] <- c("date", "ip")
@@ -50,7 +84,18 @@ getlabel <- function(filename, type = "valid", plusminus = 30) {
   other1 <- list(attack = attack, connect1 = connect1)
   att1 <- mapply(windowfun, dat$min1, dat$max1, dat$ip, MoreArgs = other1)
 
-  att1
+  # If not test, TRUE for normal
+  if(!test) {
+    att1 <- !(att1 == "attack" | att1 == "attack connectivity")
+    # Drop min1, max1 columns, add labels
+    dat <- dplyr::select(dat, -min1, -max1)
+    out <- mutate(dat, label = att1)
+
+  }else{
+    out <- att1
+  }
+
+  return(out)
 }
 
 
@@ -69,9 +114,7 @@ windowfun <- function(min1, max1, ip1, attack, connect1) {
   # Set up attack data
   attvector <- attack$datetime
   ips <- attack$ip
-
-  print(min1) 
-  
+ 
   # Number of attacks in window
   wh1 <- which((attvector < max1) & (attvector > min1))
 
@@ -120,7 +163,7 @@ windowfun <- function(min1, max1, ip1, attack, connect1) {
 
     if(l1 > 0) {
       browser()
-      out <- "attack"
+      out <- "attack connectivity"
     } else {
       out <- "IP not attacked in window"
     }
