@@ -20,8 +20,13 @@ test1 <- lf[substr(lf, 1, 5) == "testi"]
 
 
 
-# Try for validation data
+# time for validation data
+x <- proc.time()
 gl1 <- getlabel(valid1[1])
+y <- proc.time()
+y- x
+
+
 
 # check against truth
 dat <- read.csv(valid1[1], header = F, stringsAsFactors = F)
@@ -31,3 +36,9 @@ attack <- read.csv("validation-labels.csv", stringsAsFactors = F)
 
 head(dat[gl1 == "attack", ])
 
+
+
+# Run all
+dat <- labelall(valid1, test1)
+write.csv(dat$valid, file = "validation.csv")
+write.csv(dat$test, file = "test.csv")
