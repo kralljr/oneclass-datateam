@@ -12,25 +12,20 @@
 labelall <- function(valid1, test1) {
   for(i in 1 : length(valid1)) {
     dat1 <- getlabel(valid1[i])
-    if(i == 1) {
-      valid <- dat1
-    }else{
-      valid <- full_join(dat1, valid)
-    }
+
+    app1 <- ifelse(i == 1, F, T)
+    write.csv(dat1, file = "validation.csv", append = app1)
   }
 
 
   for(i in 1 : length(test1)) {
     
     dat1 <- getlabel(test1[i], type = "test" )
-    if(i == 1) {
-      test <- dat1
-    }else{
-      test <- full_join(dat1, test)
-    }
+
+    app1 <- ifelse(i == 1, F, T)
+    write.csv(dat1, file = "test.csv", append = app1)
 
   }
-  return(list(test= test, valid = valid))
 }
 
 
