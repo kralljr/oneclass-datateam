@@ -22,7 +22,7 @@ test1 <- lf[substr(lf, 1, 5) == "testi"]
 
 # time for validation data
 x <- proc.time()
-gl1 <- getlabel(valid1[1])
+gl1 <- getlabel(valid1[3])
 y <- proc.time()
 y- x
 
@@ -39,6 +39,4 @@ head(dat[gl1 == "attack", ])
 
 
 # Run all
-dat <- labelall(valid1, test1)
-write.csv(dat$valid, file = "validation.csv")
-write.csv(dat$test, file = "test.csv")
+labelall(valid1, test1)
