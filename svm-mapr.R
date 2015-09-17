@@ -62,12 +62,16 @@ svmboot.reduce <- function(k, vv) {
 # Full mapreduce function
 #
 # Specify seeds for jobs/ bootstrapped samples
-seeds <- sample(seq(1, 100000), 1000)
-nboot= to.dfs(seeds)
+#seeds <- sample(seq(1, 100000), 1000)
+#nboot= to.dfs(seeds)
 #
 # Function of total training and validation data, number of bootstraps and size of bootstraps
 # combine = T specifies same combiner as reduce
-svmboot.mr <- function(dat, valid, numboot, sizeboot, combine) {
+#' @param dat full training dataset (no labels)
+#' @param valid full validation dataset
+#' @param nboot number of bootstrapped samples
+#' @param sizeboot size of bootstrapped samples
+svmboot.mr <- function(dat, valid, numboot, sizeboot) {
   # split validation data
   validx <- valid[, -1]
   validy <- valid[, 1]
