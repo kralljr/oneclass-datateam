@@ -11,10 +11,12 @@
 #' @param test1 list of filenames for test datasets
 labelall <- function(valid1, test1) {
   for(i in 1 : length(valid1)) {
+    
     dat1 <- getlabel(valid1[i])
 
     app1 <- ifelse(i == 1, F, T)
-    write.csv(dat1, file = "validation.csv", append = app1)
+    print(c(i, app1))
+    write.table(dat1, sep = ",", file = "validation.csv", append = app1, col.names = !app1)
   }
 
 
@@ -23,7 +25,9 @@ labelall <- function(valid1, test1) {
     dat1 <- getlabel(test1[i], type = "test" )
 
     app1 <- ifelse(i == 1, F, T)
-    write.csv(dat1, file = "test.csv", append = app1)
+
+    print(c(i, app1))
+    write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1)
 
   }
 }
@@ -45,9 +49,12 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
 
   # fix date format
   dat$date <- ymd_hms(dat$date)
-  
+  ips <- dat$ip
+  datvec <- dat$date
+
+
   # get 30 second window
-  dat <- mutate(dat, min1 = date - plusminus, max1 = date + plusminus)
+  #dat <- mutate(dat, min1 = date - plusminus, max1 = date + plusminus)
 
   # first load attack data
   if(type == "valid") {
@@ -61,9 +68,11 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
 
   # convert date
   attack$datetime <- ymd_hms(attack$datetime)
-  attvector <- attack$datetime
-  ips <- attack$ip
-
+  # find window for attack data
+  attack <- mutate(attack, min1 = datetime - plusminus, max1 = datetime + plusminus)
+  
+  #ips <- attack$ip
+  #attvector <- attack$datetime
 
   
   # get connection data
@@ -76,21 +85,16 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
 
 
   # find which entries are attacks from attack data
-  other1 <- list(attack = attack, connect1 = connect1)
-  att1 <- mapply(windowfun, dat$min1, dat$max1, dat$ip, MoreArgs = other1)
+  other1 <- list(dat = dat, connect1 = connect1)
+  att1 <- mapply(windowfun, attack$min1, attack$max1, attack$ip, MoreArgs = other1)
+ 
+  # Corresponds to at least one attack 
+  att1 <- apply(att1, 1, function(x) any(x))
 
-  # If not test, TRUE for normal
-  if(!test) {
-    att1 <- !(att1 == "attack" | att1 == "attack connectivity")
-    # Drop min1, max1 columns, add labels
-    dat <- dplyr::select(dat, -min1, -max1)
-    out <- mutate(dat, label = att1)
+  # Add in labels
+  dat <- mutate(dat, label = att1)
 
-  }else{
-    out <- att1
-  }
-
-  return(out)
+  return(dat)
 }
 
 
@@ -104,24 +108,35 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
 #' @param min1 Start of window (datetime)
 #' @param max1 End of window (datetime)
 #' @param ip1 IP address in data
-windowfun <- function(min1, max1, ip1, attack, connect1) {
+windowfun <- function(min1, max1, ip1, dat, connect1) {
   
   # Set up attack data
-  attvector <- attack$datetime
-  ips <- attack$ip
+  datvec <- dat$date
+  ips <- dat$ip
  
-  # Number of attacks in window
-  wh1 <- which((attvector < max1) & (attvector > min1))
+  # Number of potential attacks (in window of attack)
+  wh1 <- which((datvec < max1) & (datvec > min1))
+  
+  # Set up output
+  attout <- 0
 
-  # these are all the IP addresses involved in attacks during the time window specified
+
+  # The IP addresses involved in attacks in time window specified
   ipatt <- ips[wh1]
 
-  # if our IP is in that vector
-  ssip1 <- substr(ip1, 1, 11)
-  if(ip1 %in% ipatt | ssip1 %in% ipatt) {
-    out <- "attack" 
-  # if IP not in vector, need to check connections
-  }else if(length(wh1) > 0) {
+  # IP for attack on entire system
+  ssipatt <- substr(ipatt, 1, 11)
+
+  # Position of attacks with matching ips
+  attacks <- wh1[which(ipatt == ip1 | ssipatt == ip1)]
+  # Save these
+  attout <- c(attout, attacks)
+
+  # Position of attacks without matching ips
+  notatt <- wh1[which(ipatt != ip1 & ssipatt != ip1)]
+  
+  # If IP not in vector, need to check connections
+  if(length(notatt) > 0) {
    
     # set up connectivity data
     convector <- connect1$datetime
@@ -129,21 +144,16 @@ windowfun <- function(min1, max1, ip1, attack, connect1) {
     conip$src <- as.character(conip$src)
     conip$dst <- as.character(conip$dst)
 
-    # ip1 is IP in data
-    # ipatt are victim IPs in attack data
-
-    # what connections occurred in time window
-    wh1 <- which((convector < max1) & (convector > min1))
+    # what connections occurred in time window of attack
+    wh2 <- which((convector < max1) & (convector > min1))
     # which IPs talked to each other in window
-    conip1 <- conip[wh1, ]
+    conip1 <- conip[wh2, ]
 
     #victim / attacker pair
-    datva <- data.frame(rep(ip1, length(ipatt)), ipatt)
+    noip <- ips[notatt]
+    datva <- data.frame(rep(ip1, length(noip)), noip)
 
-    # start counter
-    l1 <- 0
-    i <- 1
-    while(l1 == 0 && i <= nrow(datva)) {
+    for(i in 1 : nrow(datva)) {
       # match ips between connectivity and attack
       m1 <- mapply(match, conip1, datva[i, ])
       
@@ -151,26 +161,23 @@ windowfun <- function(min1, max1, ip1, attack, connect1) {
       test <- data.frame(c(1, 2), c(2, 1))
     
       # Find those that match 1,2 or 2,1
-      l0 <- apply(m1, 1, function(x) all(x == test[1, ]) | all(x == test[2, ]))
-      l1 <- l1 + sum(1 * l0[complete.cases(l0)])
-      i <- i + 1
-    }
+      l0 <- try(apply(m1, 1, function(x) all(x == test[1, ]) | all(x == test[2, ])))
+      if(class(l0) == "try-error") {browser()}
 
-    if(l1 > 0) {
-      browser()
-      out <- "attack connectivity"
-    } else {
-      out <- "IP not attacked in window"
-    }
+      l0 <- l0[complete.cases(l0)]
+      l0 <- l0[l0]
 
-    
-  
-  # If no attacks in time window, cannot be attack
-  }else {
-    out <- "no attacks in window"
+      if(length(l0) > 0) {
+        attout <- c(attout, notatt[i])  
+      }
+    }
   }
+  attout <- attout[-1]
+  # Save vector of attacks
+  attacks <- rep(FALSE, length = length(datvec))
+  attacks[attout] <- TRUE
 
-  out
+  attacks
 }
 
 
