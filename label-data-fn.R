@@ -11,8 +11,9 @@
 #' @param test1 list of filenames for test datasets
 labelall <- function(valid1, test1) {
   for(i in 1 : length(valid1)) {
-    
-    dat1 <- getlabel(valid1[i])
+        
+    dat <- read.csv(valid1[i], header = F, stringsAsFactors = F)
+    dat1 <- getlabel(dat, valid1[i])
 
     app1 <- ifelse(i == 1, F, T)
     print(c(i, app1))
@@ -21,14 +22,15 @@ labelall <- function(valid1, test1) {
 
 
   for(i in 1 : length(test1)) {
-    
-    dat1 <- getlabel(test1[i], type = "test" )
+    if(i != 2) { 
+      dat <- read.csv(test1[i], header = F, stringsAsFactors = F)
+      dat1 <- getlabel(dat, test1[i], type = "test" )
 
-    app1 <- ifelse(i == 1, F, T)
+      app1 <- ifelse(i == 1, F, T)
 
-    print(c(i, app1))
-    write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1)
-
+      print(c(i, app1))
+      write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1)
+      }
   }
 }
 
@@ -39,12 +41,13 @@ labelall <- function(valid1, test1) {
 #' This function takes the filename, and some other information
 #' and outputs the data with applied attack (1) and normal (0) labels
 #'
-#' @param filename name of validation or test data
+#' @param dat validation or test data
+#' @param filename filename of data
 #' @param type validation or test data, default "valid"
 #' @param plusminus number of seconds in window (+/-)
-getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
-  # read in data
-  dat <- read.csv(filename, header = F, stringsAsFactors = F)
+getlabel <- function(dat, filename, type = "valid", plusminus = 30, test = F) {
+  
+  # label columns in data
   colnames(dat)[1 : 2] <- c("date", "ip")
 
   # fix date format
@@ -68,6 +71,11 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
 
   # convert date
   attack$datetime <- ymd_hms(attack$datetime)
+
+  # limit attack data to current day
+  days <- unique(day(dat$date)) 
+  attack <- dplyr::filter(attack, day(datetime) %in% days)
+
   # find window for attack data
   attack <- mutate(attack, min1 = datetime - plusminus, max1 = datetime + plusminus)
   
@@ -78,10 +86,6 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
   # get connection data
   connect1 <- get(sapply(strsplit(gsub("-", "_", filename), "\\."),
     function(x) x[1]))
-  convector <- connect1$datetime
-  conip <- connect1[, c("src", "dst")]
-  conip$src <- as.character(conip$src)
-  conip$dst <- as.character(conip$dst)
 
 
   # find which entries are attacks from attack data
@@ -89,7 +93,7 @@ getlabel <- function(filename, type = "valid", plusminus = 30, test = F) {
   att1 <- mapply(windowfun, attack$min1, attack$max1, attack$ip, MoreArgs = other1)
  
   # Corresponds to at least one attack 
-  att1 <- apply(att1, 1, function(x) any(x))
+  att1 <- apply(att1, 1, function(x) max(x))
 
   # Add in labels
   dat <- mutate(dat, label = att1)
@@ -132,8 +136,15 @@ windowfun <- function(min1, max1, ip1, dat, connect1) {
   # Save these
   attout <- c(attout, attacks)
 
+
+  # Save vector of attacks
+  attacks <- rep(0, length = length(datvec))
+  attacks[attout] <- 1
+
+
   # Position of attacks without matching ips
   notatt <- wh1[which(ipatt != ip1 & ssipatt != ip1)]
+  
   
   # If IP not in vector, need to check connections
   if(length(notatt) > 0) {
@@ -149,33 +160,25 @@ windowfun <- function(min1, max1, ip1, dat, connect1) {
     # which IPs talked to each other in window
     conip1 <- conip[wh2, ]
 
-    #victim / attacker pair
+    #limit to attack IP
+    conip1 <- conip1[apply(conip1, 1, function(x) ((ip1 %in% x) | ip1 %in% substr(x, 1, 11))), ]
+    # find unique IPs that talked with attack IP
+    conip1 <- unique(unlist(conip1))
+    # remove attack ip
+    conip1 <- conip1[conip1 != ip1]
+
+    # what are the IPs in window, not IP in attack 
     noip <- ips[notatt]
-    datva <- data.frame(rep(ip1, length(noip)), noip)
-
-    for(i in 1 : nrow(datva)) {
-      # match ips between connectivity and attack
-      m1 <- mapply(match, conip1, datva[i, ])
+    ssnoip <- substr(noip, 1, 11)
+    # find those that talked with attack in time window
+    notatt2 <- notatt[which(noip %in% conip1 | ssnoip %in% conip1)]
+    if(length(notatt2) > 0) {
       
-      # get different orders of match
-      test <- data.frame(c(1, 2), c(2, 1))
-    
-      # Find those that match 1,2 or 2,1
-      l0 <- try(apply(m1, 1, function(x) all(x == test[1, ]) | all(x == test[2, ])))
-      if(class(l0) == "try-error") {browser()}
-
-      l0 <- l0[complete.cases(l0)]
-      l0 <- l0[l0]
-
-      if(length(l0) > 0) {
-        attout <- c(attout, notatt[i])  
-      }
+      attacks[notatt2] <- 2
+      #attout <- c(attout, notatt2)
     }
-  }
-  attout <- attout[-1]
-  # Save vector of attacks
-  attacks <- rep(FALSE, length = length(datvec))
-  attacks[attout] <- TRUE
+  }  
+
 
   attacks
 }
