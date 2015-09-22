@@ -21,7 +21,7 @@ test1 <- lf[substr(lf, 1, 5) == "testi"]
 
 ############ Only function needed to label and create validation and test datasets
 # Label all and output datasets
-i
+labelall(valid1, test1)
 
 
 
@@ -33,6 +33,14 @@ i
 labelall(valid1[1], test1[1])
 
 dat <- read.csv("validation.csv")
+dat <- read.csv("test.csv")
+
+
+length(which(dat$label != 0)) / length(dat$label)
+
+
+
+
 
 
 
