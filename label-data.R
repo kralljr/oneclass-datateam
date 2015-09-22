@@ -21,9 +21,18 @@ test1 <- lf[substr(lf, 1, 5) == "testi"]
 
 ############ Only function needed to label and create validation and test datasets
 # Label all and output datasets
-labelall(valid1, test1)
+i
 
 
+
+
+
+
+######
+# Check labelling function
+labelall(valid1[1], test1[1])
+
+dat <- read.csv("validation.csv")
 
 
 
@@ -60,17 +69,20 @@ connect1 <- get(sapply(strsplit(gsub("-", "_", valid1[2]), "\\."),
   function(x) x[1]))
 connect1$src <- as.character(connect1$src)
 connect1$dst <- as.character(connect1$dst)
+
+min1 <- min1 - 2
+max1 <- max1 + 2 
+
 connect1 <- dplyr::filter(connect1, datetime <= max1 & datetime >= min1)
 # Restrict to connections with victim IP
 connect1 <- dplyr::filter(connect1, substr(src, 1, 11) == vip | substr(dst, 1, 11) == vip) 
 
 
-dat2[, c(1, 2)]
+data.frame(label1, dat2[, c(1, 2)])
 connect1
-label1
 
-#28285 should be 1
-#28288 should be 2
+
+
 
 
 
@@ -90,7 +102,7 @@ dat[, 1] <- ymd_hms(dat[, 1])
 colnames(dat)[1] <- "date"
 
 # Run labeller
-gl1 <- getlabel(dat2, valid1[j])
+gl1 <- getlabel(dat, valid1[j])
 labs <- gl1$label
 
 m1 <- attack[17, 1] - 30
@@ -110,19 +122,94 @@ attack[, 1] <- ymd_hms(attack[, 1])
 vip <- as.character(attack[17, 2])
 
 # get connection data
-connect1 <- get(sapply(strsplit(gsub("-", "_", valid1[2]), "\\."),
+connect1 <- get(sapply(strsplit(gsub("-", "_", valid1[j]), "\\."),
   function(x) x[1]))
 connect1$src <- as.character(connect1$src)
 connect1$dst <- as.character(connect1$dst)
-connect1 <- dplyr::filter(connect1, datetime <= max1 & datetime >= min1)
+m1 <- m1 - 5
+m2 <- m2 + 5
+
+connect1 <- dplyr::filter(connect1, datetime <= m2 & datetime >= m1)
 # Restrict to connections with victim IP
-connect1 <- dplyr::filter(connect1, substr(src, 1, 11) == vip | substr(dst, 1, 11) == vip) 
+connect2 <- dplyr::filter(connect1, substr(src, 1, 11) == vip | substr(dst, 1, 11) == vip) 
 
-
+# Should either be 0 or 2
 data.frame(labs2, 1  * (substr(dat2[, 2], 1, 11) == vip)) %>% rowSums() %>% table()
 
-unique(dat2[labs2 == 0, 2])
-unique(unlist(connect1[, c(2, 3)]))
+
+# These should not match
+connect2
+dat2[which(labs2 == 0), ]
+
+
+data.frame(labs2, dat2[, 2])
+
+dat2[labs2 == 2, c(1, 2)]
+
+
+
+
+
+
+##### Test for labelling
+
+# 03 11 20:47:15
+
+
+
+# Use validation, day 2
+j <- 4
+dat <- read.csv(valid1[j], header = F, stringsAsFactors = F)
+# Find good window
+
+dat[, 1] <- ymd_hms(dat[, 1])
+colnames(dat)[1] <- "date"
+
+# Run labeller
+gl1 <- getlabel(dat, valid1[j])
+labs <- gl1$label
+
+m1 <- attack[24, 1] - 30
+m2 <- attack[24, 1] + 30
+
+
+labs2 <- labs[which(dat$date < m2 & dat$date > m1)]
+dat2 <- dat[which(dat$date < m2 & dat$date > m1), c(1, 2)]
+attack[24, c(1, 2)]
+
+
+# Check against truth
+vip <- as.character(attack[24, 2])
+
+# get connection data
+connect1 <- get(sapply(strsplit(gsub("-", "_", valid1[j]), "\\."),
+  function(x) x[1]))
+connect1$src <- as.character(connect1$src)
+connect1$dst <- as.character(connect1$dst)
+m1 <- m1 - 2
+m2 <- m2 + 2
+
+connect1 <- dplyr::filter(connect1, datetime <= m2 & datetime >= m1)
+# Restrict to connections with victim IP
+connect2 <- dplyr::filter(connect1, substr(src, 1, 15) == vip | substr(dst, 1, 15) == vip) 
+
+# Should either be 0 or 2
+df1 <- data.frame(labs2, 1  * (substr(dat2[, 2], 1, 15) == vip)) 
+df1 %>% rowSums() %>% table()
+
+
+# These should not match
+ids <- unique(unlist(connect2[, -1]))
+dat2[which(labs2 == 0 & dat2[, 2] %in% ids), ]
+
+
+data.frame(labs2, dat2[, 2])
+
+dat2[labs2 == 2, c(1, 2)]
+
+
+
+
 
 
 
@@ -150,8 +237,8 @@ connect1 <- get(sapply(strsplit(gsub("-", "_", valid1[2]), "\\."),
   function(x) x[1]))
 
 # Window for connection data
-min1 <- t1 - 10
-max1 <- t1 + 10
+min1 <- t1 - 4
+max1 <- t1 + 4
 
 # Connection data in window
 wh2 <- connect1[which(connect1[, 1] <= max1 & connect1[, 1] >= min1),]
