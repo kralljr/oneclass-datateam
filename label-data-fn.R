@@ -17,7 +17,7 @@ labelall <- function(valid1, test1) {
 
     app1 <- ifelse(i == 1, F, T)
     print(c(i, app1))
-    write.table(dat1, sep = ",", file = "validation.csv", append = app1, col.names = !app1)
+    write.table(dat1, sep = ",", file = "validation.csv", append = app1, col.names = !app1, row.names = F)
   }
 
 
@@ -29,7 +29,7 @@ labelall <- function(valid1, test1) {
       app1 <- ifelse(i == 1, F, T)
 
       print(c(i, app1))
-      write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1)
+      write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1, row.names = F)
       }
   }
 }
