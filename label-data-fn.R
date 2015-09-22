@@ -112,7 +112,7 @@ getlabel <- function(dat, filename, type = "valid", plusminus = 30, test = F) {
 #' @param min1 Start of window (datetime)
 #' @param max1 End of window (datetime)
 #' @param ip1 IP address in data
-windowfun <- function(min1, max1, ip1, dat, connect1, shift = 1) {
+windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
   
   # Set up attack data
   datvec <- dat$date
@@ -163,46 +163,30 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 1) {
     #limit to attack IP
     conip1 <- conip1[apply(conip1[, -1], 1, function(x) ((ip1 %in% x) | ip1 %in% substr(x, 1, 11))), ]
     # find unique IPs that talked with attack IP
-    conip2 <- unique(unlist(conip1))
-    # remove attack ip
-    conip2 <- conip2[conip2 != ip1]
 
-    # what are the IPs in window, not IP in attack 
-    noip <- ips[notatt]
-    ssnoip <- substr(noip, 1, 11)
-    # find those that talked with attack in time window
-    notatt2 <- notatt[which(noip %in% conip2 | ssnoip %in% conip2)]
-    if(length(notatt2) > 0) {
-      
-      attacks[notatt2] <- 2
-      #attout <- c(attout, notatt2)
-    }
+    #for each observation in notatt
+    for(i in 1 : length(notatt)) {
+      date1 <- datvec[notatt[i]] 
+      min1 <- date1 - shift
+      max1 <- date1 + shift
+      con2 <- filter(conip1, datetime < max1 & datetime > min1)
+      con2 <- unique(unlist(con2))
+      con2 <- con2[con2 != ip1]
 
-    try2 <- F
-    if(try2) {
-      #for each observation in notatt
-      for(i in 1 : length(notatt)) {
-        date1 <- datvec[notatt] 
-        min1 <- date1 - shift
-        max1 <- date1 + shift
-        con2 <- filter(conip1, datetime < max1 & datetime > min1)
-        con2 <- unique(unlist(con2))
-        con2 <- con2[con2 != ip1]
-
-        # what are the IPs in window, not IP in attack 
-        noip <- ips[notatt]
-        ssnoip <- substr(noip, 1, 11)
-        # find those that talked with attack in time window
-        notatt2 <- notatt[which(noip %in% conip2 | ssnoip %in% conip2)]
+      # what are the IPs in window, not IP in attack 
+      noip <- ips[notatt[i]]
+      ssnoip <- substr(noip, 1, 11)
+      # find those that talked with attack in time window
+      #notatt2 <- notatt[which(noip %in% con2 | ssnoip %in% con2)]
 
 
-        if(length(notatt2) > 0) {
+      if(noip %in% con2 | ssnoip %in% con2) {
 
-          attacks[notatt2] <- 2
-          #attout <- c(attout, notatt2)
-        }
+        attacks[notatt[i]] <- 2
+        #attout <- c(attout, notatt2)
       }
     }
+    
     
   }  
 
