@@ -66,9 +66,9 @@ innerbag <- function(dat, valid, size, N, gam1, nu1, cost1, ef) {
 
   # Tune
   # start <- proc.time()
-  dat1 <- dats[dats$y, ]
-  validx <- valid[, -1]
-  validy <- valid[, 1]
+  dat1 <- dats[dats$label, ]
+  validx <- dplyr::select(valid, -label)
+  validy <- valid$label
 
 
   tc <- tune.control(sampling = "fix", error.fun = ef)
