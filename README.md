@@ -10,6 +10,7 @@ The USPS zipcode dataset can be found here: http://statweb.stanford.edu/~tibs/El
   1. bag-svm.R  Functions to perform bagged training of one-class SVMs and possible error functions.
   2. label-data-fn.R Functions to label data
   3. svm-map.R Functions for mapreduct for bootstrap.  Need to decide number of bootstrap samples, size of bootstrap samples, error function
+  4. error-fun.R Error functions to use in SVM
 
 ## Files for data team use and exploration
   1. compare-bag.R file to check error function and SVM results
@@ -25,3 +26,5 @@ The USPS zipcode dataset can be found here: http://statweb.stanford.edu/~tibs/El
   11. simulate-bag-all.R file to demonstrate tuning on subsample of example data
   12. simulate-bag.R file to demonstrate tuning on subsample of example data using simple and more complex cases
   13. time-svm-cluster.R Function to time SVMs prior to running on cluster
+  14. create-training.R File to create training, validation, and test datasets for use
+  15. time-full-valid.R File to time SVM training and testing
