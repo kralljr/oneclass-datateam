@@ -21,7 +21,9 @@ test1 <- lf[substr(lf, 1, 5) == "testi"]
 
 ############ Only function needed to label and create validation and test datasets
 # Label all and output datasets
-labelall(valid1, test1)
+rms <- c("V57","V58","V59","V61","V63","V64","V65","V67","V69","V70","V73","V74","V75","V77","V79","V80","V81","V83","V85","V86","V89","V90","V91","V93","V95","V96","V97","V99","V101","V102")
+
+#labelall(valid1, test1, rms)
 
 
 
