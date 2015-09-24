@@ -9,14 +9,32 @@
 #' 
 #' @param valid1 list of filenames for validation datasets
 #' @param test1 list of filenames for test datasets
-labelall <- function(valid1, test1) {
+labelall <- function(valid1, test1, mns1, sds1, rms = NULL) {
   for(i in 1 : length(valid1)) {
         
     dat <- read.csv(valid1[i], header = F, stringsAsFactors = F)
+    
+    # remove date and ip
+    datd <- dat[, c(1, 2)]
+    dat <- dat[, -c(1, 2)]
+
+    # rescale
+    dat <- sweep(dat, 2, mns1, "-")
+    dat[, sds1 != 0] <- sweep(dat[, sds1 != 0], 2, sds1[sds1 != 0], "/")
+
+
+    if(!is.null(rms)) {
+      dat <- dat[, -which(colnames(dat) %in% rms)]
+    }
+
+    dat <- data.frame(datd, dat)
     dat1 <- getlabel(dat, valid1[i])
 
     app1 <- ifelse(i == 1, F, T)
     print(c(i, app1))
+
+    dat1 <- dat1[, -c(1, 2)]
+
     write.table(dat1, sep = ",", file = "validation.csv", append = app1, col.names = !app1, row.names = F)
   }
 
@@ -24,11 +42,27 @@ labelall <- function(valid1, test1) {
   for(i in 1 : length(test1)) {
     if(i != 2) { 
       dat <- read.csv(test1[i], header = F, stringsAsFactors = F)
+
+      # remove date and ip
+      datd <- dat[, c(1, 2)]
+      dat <- dat[, -c(1, 2)]
+
+      # rescale
+      dat <- sweep(dat, 2, mns1, "-")
+      dat[, sds1 != 0] <- sweep(dat[, sds1 != 0], 2, sds1[sds1 != 0], "/")
+
+      if(!is.null(rms)) {
+        dat <- dat[, -which(colnames(dat) %in% rms)]
+      }
+
+      dat <- data.frame(datd, dat)
       dat1 <- getlabel(dat, test1[i], type = "test" )
 
       app1 <- ifelse(i == 1, F, T)
 
       print(c(i, app1))
+     
+      dat1 <- dat1[, -c(1, 2)]
       write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1, row.names = F)
       }
   }
@@ -91,9 +125,11 @@ getlabel <- function(dat, filename, type = "valid", plusminus = 30, test = F) {
   # find which entries are attacks from attack data
   other1 <- list(dat = dat, connect1 = connect1)
   att1 <- mapply(windowfun, attack$min1, attack$max1, attack$ip, MoreArgs = other1)
- 
+
+
   # Corresponds to at least one attack 
-  att1 <- apply(att1, 1, function(x) max(x))
+  att1 <- apply(att1, 1, function(x) min(x))
+  att1 <- att1 == 1
 
   # Add in labels
   dat <- mutate(dat, label = att1)
@@ -121,9 +157,6 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
   # Number of potential attacks (in window of attack)
   wh1 <- which((datvec < max1) & (datvec > min1))
   
-  # Set up output
-  attout <- 0
-
 
   # The IP addresses involved in attacks in time window specified
   ipatt <- ips[wh1]
@@ -132,14 +165,12 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
   ssipatt <- substr(ipatt, 1, 11)
 
   # Position of attacks with matching ips
-  attacks <- wh1[which(ipatt == ip1 | ssipatt == ip1)]
-  # Save these
-  attout <- c(attout, attacks)
+  attout <- wh1[which(ipatt == ip1 | ssipatt == ip1)]
 
 
   # Save vector of attacks
-  attacks <- rep(0, length = length(datvec))
-  attacks[attout] <- 1
+  attacks <- rep(T, length = length(datvec))
+  attacks[attout] <- F
 
 
   # Position of attacks without matching ips
@@ -182,8 +213,7 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
 
       if(noip %in% con2 | ssnoip %in% con2) {
 
-        attacks[notatt[i]] <- 2
-        #attout <- c(attout, notatt2)
+        attacks[notatt[i]] <- F
       }
     }
     
