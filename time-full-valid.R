@@ -69,7 +69,7 @@ for(i in 1 : length(ns)) {
 
 # Time 1 tune on N samples
 ef <- mixtype
-tc <- tune.control(sampling = "fix", error.fun = ef)
+tc <- tune.control(sampling = "fix", error.fun = ef, fix = 1)
 
 datsub2 <- mutate(datsub, label = T)
 
@@ -126,7 +126,7 @@ colnames(datsub) <- paste0("col", seq(1, ncol(datsub)))
 
 x <- proc.time()
 
-svm_model <- svm(datsub, kernel = "radial", scale = F, nu = nu1[2], gam = gam1[2], type = "one-classification")
+svm_model <- svm(datsub, kernel = "radial", scale = F, nu = 0.5, gam = 0.1, type = "one-classification")
 
 p1 <- predict(svm_model, validx)
 mt <- mixtype(validy, p1)
