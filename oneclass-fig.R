@@ -1,10 +1,11 @@
 
 
 # Change this directory path to where your data are stored
-mylib <- "~/Documents/Work/oneclass"
+#mylib <- "~/Documents/Work/oneclass"
+
 
 # source class1 function
-source(file.path(mylib, "oneclass-pred.R"))
+source("oneclass-pred.R")
 
 # Load libraries
 #library(e1071)
@@ -237,6 +238,11 @@ g4 <- g2 + geom_point(data = newdat2, aes(x = z1, y = z2), colour = cols2[2],
 
 
 png("oneclass-viz.png", height = 500, width = 1400)
+grid.arrange(g1, g2, g3, g4, nrow = 1)
+dev.off()
+
+
+pdf("oneclass-viz.pdf", height = 5, width = 15)
 grid.arrange(g1, g2, g3, g4, nrow = 1)
 dev.off()
 

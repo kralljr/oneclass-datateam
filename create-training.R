@@ -107,3 +107,14 @@ for(i in 1 : length(train1)) {
 # Label and save validation and test data
 labelall(valid1, test1, mns1, sds1, rms)
 
+
+
+
+# fix column names
+valid1 <- read.csv("validation-names.csv")
+colnames(valid1) <- c("date", "ip", "label", "name")
+write.csv(valid1, "validation-names.csv", row.names = F)
+
+test1 <- read.csv("test-names.csv")
+colnames(test1) <- c("date", "ip", "label", "name")
+write.csv(test1, "test-names.csv", row.names = F)

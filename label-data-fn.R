@@ -29,13 +29,24 @@ labelall <- function(valid1, test1, mns1, sds1, rms = NULL) {
 
     dat <- data.frame(datd, dat)
     dat1 <- getlabel(dat, valid1[i])
+    names1 <- dat1$names
+    dat1 <- dat1$dat
 
     app1 <- ifelse(i == 1, F, T)
     print(c(i, app1))
 
-    dat1 <- dat1[, -c(1, 2)]
 
-    write.table(dat1, sep = ",", file = "validation.csv", append = app1, col.names = !app1, row.names = F)
+
+    # Save names
+    names1 <- data.frame(dat1[, 1], dat1[, 2], dat1$label, names1)    
+    write.table(names1, sep = ",", file = "validation-names.csv", append = app1, col.names = !app1, row.names = F)
+
+
+    # Save data
+    dat1 <- dat1[, -c(1, 2)]
+    #write.table(dat1, sep = ",", file = "validation.csv", append = app1, col.names = !app1, row.names = F)
+
+
   }
 
 
@@ -58,12 +69,24 @@ labelall <- function(valid1, test1, mns1, sds1, rms = NULL) {
       dat <- data.frame(datd, dat)
       dat1 <- getlabel(dat, test1[i], type = "test" )
 
+      names1 <- dat1$names
+      dat1 <- dat1$dat
+      
       app1 <- ifelse(i == 1, F, T)
 
       print(c(i, app1))
-     
+
+      if(class(names1) == "list") {
+        names1 <- sapply(names1, function(x) paste(x, collapse = ":"))
+      }
+
+      # save names
+      names1 <- data.frame(dat1[, 1], dat1[, 2], dat1$label, names1)    
+      write.table(names1, sep = ",", file = "test-names.csv", append = app1, col.names = !app1, row.names = F)
+
+      #save data
       dat1 <- dat1[, -c(1, 2)]
-      write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1, row.names = F)
+      #write.table(dat1, sep = ",",file = "test.csv", append = app1, col.names = !app1, row.names = F)
       }
   }
 }
@@ -123,8 +146,21 @@ getlabel <- function(dat, filename, type = "valid", plusminus = 30, test = F) {
 
 
   # find which entries are attacks from attack data
-  other1 <- list(dat = dat, connect1 = connect1)
-  att1 <- mapply(windowfun, attack$min1, attack$max1, attack$ip, MoreArgs = other1)
+  other1 <- list(dat = dat, connect1 = connect1, type = "attack")
+  att1 <- mapply(windowfun, attack$min1, attack$max1, attack$ip, attack$name,  MoreArgs = other1)
+
+
+  other1 <- list(dat = dat, connect1 = connect1, type = "names")
+  names1 <- mapply(windowfun, attack$min1, attack$max1, attack$ip, attack$name,  MoreArgs = other1)
+  names1 <- apply(names1, 1, function(x) {
+    whx <- which(!is.na(x))
+    if(length(whx) > 0) {
+      out <- unique(x[whx])
+    }else{
+      out <- NA
+    }
+    out
+})
 
 
   # Corresponds to at least one attack 
@@ -134,7 +170,8 @@ getlabel <- function(dat, filename, type = "valid", plusminus = 30, test = F) {
   # Add in labels
   dat <- mutate(dat, label = att1)
 
-  return(dat)
+  list1 <- list(dat = dat, names = names1)
+  return(list1)
 }
 
 
@@ -148,8 +185,9 @@ getlabel <- function(dat, filename, type = "valid", plusminus = 30, test = F) {
 #' @param min1 Start of window (datetime)
 #' @param max1 End of window (datetime)
 #' @param ip1 IP address in data
-windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
-  
+#' @param name attack type
+#' @param type return names or attack data
+windowfun <- function(min1, max1, ip1, name, dat, connect1, type = "attack", shift = 2) {
   # Set up attack data
   datvec <- dat$date
   ips <- dat$ip
@@ -160,6 +198,7 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
 
   # The IP addresses involved in attacks in time window specified
   ipatt <- ips[wh1]
+  
 
   # IP for attack on entire system
   ssipatt <- substr(ipatt, 1, 11)
@@ -172,6 +211,8 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
   attacks <- rep(T, length = length(datvec))
   attacks[attout] <- F
 
+  names1 <- rep(NA, length = length(datvec))
+  names1[attout] <- name
 
   # Position of attacks without matching ips
   notatt <- wh1[which(ipatt != ip1 & ssipatt != ip1)]
@@ -214,14 +255,20 @@ windowfun <- function(min1, max1, ip1, dat, connect1, shift = 2) {
       if(noip %in% con2 | ssnoip %in% con2) {
 
         attacks[notatt[i]] <- F
+        names1[notatt[i]] <- name 
       }
     }
     
     
   }  
 
-
-  attacks
+  data.frame(attacks, names1)
+  if(type == "attack") {
+    out <- attacks
+  } else{
+    out <- names1
+  }
+  out
 }
 
 
